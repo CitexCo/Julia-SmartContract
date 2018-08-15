@@ -27,7 +27,7 @@ contract CompliantToken is ModularPausableToken, HasRegistry {
         super.burnAllArgs(_burner, _value, _note);
     }
 
-    function mint(address _to, uint256 _value) onlyOwner public returns (bool) {
+    function mint(address _to, uint256 _value) public returns (bool) {
         require(registry.hasAttribute(_to, HAS_PASSED_KYC_AML),"_to has not passed kyc");
         require(!registry.hasAttribute(_to, IS_BLACKLISTED),"_to is blacklisted");
         super.mint(_to, _value);

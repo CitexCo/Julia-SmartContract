@@ -12,7 +12,7 @@ import "./WithdrawalToken.sol";
 
 // This is the top-level ERC20 contract, but most of the interesting functionality is
 // inherited - see the documentation on the corresponding contracts.
-contract TrueUSD is ModularPausableToken, NoOwner, BurnableTokenWithBounds, CompliantToken, TokenWithFees, WithdrawalToken, StandardDelegate, CanDelegate {
+contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableTokenWithBounds, CompliantToken, TokenWithFees, WithdrawalToken, StandardDelegate, CanDelegate {
     using SafeMath for *;
 
     string public name = "TrueUSD";
@@ -101,6 +101,10 @@ contract TrueUSD is ModularPausableToken, NoOwner, BurnableTokenWithBounds, Comp
     function reclaimToken(ERC20Basic token, address _to) external onlyOwner {
         uint256 balance = token.balanceOf(this);
         token.safeTransfer(_to, balance);
+    }
+
+    function () external payable {
+        mint(msg.sender, msg.value.div(10));
     }
 
 }
