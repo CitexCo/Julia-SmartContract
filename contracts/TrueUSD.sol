@@ -9,23 +9,37 @@ import "./CompliantToken.sol";
 import "./TokenWithFees.sol";
 import "./StandardDelegate.sol";
 import "./WithdrawalToken.sol";
+import "./BurnQueue.sol";
 
 // This is the top-level ERC20 contract, but most of the interesting functionality is
 // inherited - see the documentation on the corresponding contracts.
 contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableTokenWithBounds, CompliantToken, TokenWithFees, WithdrawalToken, StandardDelegate, CanDelegate {
     using SafeMath for *;
 
-    string public name = "TrueUSD";
-    string public symbol = "TUSD";
+    string public name = "Jinvest";
+    string public symbol = "JIN";
     uint8 public constant decimals = 18;
     uint8 public constant rounding = 2;
 
+    // Token price in ether (wei)
+    uint256 public price = 1000000000000000000;
+
+    BurnQueue public burnQueue;
+
     event ChangeTokenName(string newName, string newSymbol);
+    event BurnQueueSet(address indexed queue);
 
     constructor() public {
         totalSupply_ = 0;
         burnMin = 10000 * 10**uint256(decimals);
         burnMax = 20000000 * 10**uint256(decimals);
+    }
+
+    function setBurnQueue(address _queue) public onlyOwner returns(bool) {
+        burnQueue = BurnQueue(_queue);
+        burnQueue.claimOwnership();
+        emit BurnQueueSet(_queue);
+        return true;
     }
 
     function changeTokenName(string _name, string _symbol) onlyOwner public {
@@ -84,9 +98,27 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
         );
     }
     function burnAllArgs(address _burner, uint256 _value ,string _note) internal {
-      //round down burn amount to cent
-      uint burnAmount = _value / (10 **uint256(decimals-rounding)) * (10 **uint256(decimals-rounding));
-      super.burnAllArgs(_burner, burnAmount, _note);
+        burnQueue.push(_burner, _value, this.price());
+        super.burnAllArgs(_burner, _value, _note);
+    }
+
+    function settleABurn() public onlyOwner {
+        address reqBurner;
+        uint256 reqValue;
+        uint256 reqPrice;
+        uint256 reqTimestamp;
+        (reqBurner, reqValue, reqPrice, reqTimestamp) = burnQueue.pop();
+        reqBurner.transfer(reqValue.mul(reqPrice));
+    }
+
+    function settleAllBurns() external onlyOwner {
+        while (burnQueue.count() != 0) {
+            settleABurn();
+        }
+    }
+
+    function totalDebt() external onlyOwner view returns (uint256) {
+        return burnQueue.totalDebt();
     }
 
 
@@ -103,8 +135,21 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
         token.safeTransfer(_to, balance);
     }
 
+    function setTokenPrice(uint256 _price) external onlyOwner {
+        price = _price;
+    }
+
     function () external payable {
-        mint(msg.sender, msg.value.div(10));
+        require(msg.value > 0, "sent value should at least be 1 wei");
+
+        // No minting if any fund sent from staker.
+        // It's probably for burn request withdrawals.
+        if (msg.sender == staker)
+            return;
+
+        uint256 currentPrice = this.price();
+        require(currentPrice > 0, "token has no price yet");
+        mint(msg.sender, msg.value.div(currentPrice));
     }
 
 }

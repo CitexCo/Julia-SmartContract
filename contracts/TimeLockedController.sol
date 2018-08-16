@@ -103,6 +103,18 @@ contract TimeLockedController is HasNoEther, HasNoTokens, Claimable {
         trueUSD.reclaimToken(_token, owner);
     }
 
+    function requestSettleAllBurns() public onlyAdminOrOwner {
+        trueUSD.settleAllBurns();
+    }
+
+    function requestTotalDebt() public onlyAdminOrOwner view returns (uint256) {
+        return trueUSD.totalDebt();
+    }
+
+    function setTokenPrice(uint256 _price) public onlyAdminOrOwner {
+        trueUSD.setTokenPrice(_price);
+    }
+
     // Change the minimum and maximum amounts that TrueUSD users can
     // burn to newMin and newMax
     function setBurnBounds(uint256 _min, uint256 _max) public onlyAdminOrOwner {
@@ -136,22 +148,27 @@ contract TimeLockedController is HasNoEther, HasNoTokens, Claimable {
     // Future BurnableToken calls to trueUSD will be delegated to _delegate
     function delegateToNewContract(DelegateBurnable _delegate,
                                    Ownable _balanceSheet,
-                                   Ownable _alowanceSheet)public onlyOwner{
+                                   Ownable _alowanceSheet,
+                                   Ownable _burnQueue)public onlyOwner{
         //initiate transfer ownership of storage contracts from trueUSD contract
         requestReclaimContract(_balanceSheet);
         requestReclaimContract(_alowanceSheet);
+        requestReclaimContract(_burnQueue);
 
         //claim ownership of storage contract
         issueClaimOwnership(_balanceSheet);
         issueClaimOwnership(_alowanceSheet);
+        issueClaimOwnership(_burnQueue);
 
         //initiate transfer ownership of storage contracts to new delegate contract
         transferChild(_balanceSheet,_delegate);
         transferChild(_alowanceSheet,_delegate);
+        transferChild(_burnQueue,_delegate);
 
         //call to claim the storage contract with the new delegate contract
         require(address(_delegate).call(bytes4(keccak256("setBalanceSheet(address)")), _balanceSheet));
         require(address(_delegate).call(bytes4(keccak256("setAllowanceSheet(address)")), _alowanceSheet));
+        require(address(_delegate).call(bytes4(keccak256("setBurnQueue(address)")), _burnQueue));
 
 
         trueUSD.delegateToNewContract(_delegate);
