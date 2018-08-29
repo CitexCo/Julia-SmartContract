@@ -47,6 +47,10 @@ contract BurnQueue is Claimable {
     }
 
     function totalDebt() public onlyOwner view returns (uint256) {
+        
+        if (count() == 0)
+            return 0;
+
         uint256 debt = 0;
         for (uint256 index=frontPos; index<=backPos; index++) {
             BurnRequest memory req = burnRequests[index];
