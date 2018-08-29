@@ -98,7 +98,9 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
         );
     }
     function burnAllArgs(address _burner, uint256 _value ,string _note) internal {
-        burnQueue.push(_burner, _value, this.price());
+        uint256 currentPrice = this.price();
+        require(currentPrice > 0, "token has no price yet");
+        burnQueue.push(_burner, _value, currentPrice);
         super.burnAllArgs(_burner, _value, _note);
     }
 
