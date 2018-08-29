@@ -1,4 +1,10 @@
-# TrueUSD
+# Julia Invest Token (a fork of TrueUSD)
+
+Changes that we've made so far:
+
+- Removing HasNoEther from TrueUSD main contract inheritance list and adding a payble function to it. So that every time someone sends ether to the contract, the contract mints some token for the sender
+- Adding a BurnQueue contract, so that when some one requests a burn, the request gets queued. Owner of the contract can then see how much debt has been accumulated, charge the contract by sending some ether to it and settle all the debts (empty the burn queue)
+
 
 This repository contains the TrueUSD ERC20 contract and related contracts.
 
