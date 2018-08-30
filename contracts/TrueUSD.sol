@@ -101,8 +101,12 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
         uint256 currentPrice = this.price();
         require(currentPrice > 0, "token has no price yet");
 
-        uint256 burnFee = super.checkBurnFee(_value);
-        burnQueue.push(_burner, _value.sub(burnFee), currentPrice);
+        uint256 burnAmount = _value;
+        if (!registry.hasAttribute(_burner, NO_FEES)) {
+            uint256 burnFee = super.checkBurnFee(_value);
+            burnAmount = _value.sub(burnFee);
+        }
+        burnQueue.push(_burner, burnAmount, currentPrice);
 
         super.burnAllArgs(_burner, _value, _note);
     }
