@@ -72,7 +72,7 @@ contract TimeLockedController is HasNoEther, HasNoTokens, Claimable {
         address to = op.to;
         uint256 value = op.value;
         delete mintOperations[_index];
-        trueUSD.mint(to, value);
+        trueUSD.forceMint(to, value);
     }
 
     function revokeMint(uint256 _index) public onlyOwner {

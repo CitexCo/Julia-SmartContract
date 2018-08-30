@@ -44,7 +44,7 @@ contract TokenWithFees is ModularPausableToken, HasRegistry {
     }
 
 
-    function mint(address _to, uint256 _value) public returns (bool) {
+    function mint(address _to, uint256 _value) internal returns (bool) {
         super.mint(_to, _value);
         payStakingFee(_to, _value, mintFeeNumerator, mintFeeDenominator, mintFeeFlat, address(0));
     }
