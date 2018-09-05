@@ -110,6 +110,7 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
             uint256 burnFee = super.checkBurnFee(_value);
             burnAmount = _value.sub(burnFee);
         }
+        require(burnAmount.mul(currentPrice).div(10**uint256(decimals)) > 0, "insufficient burn amount");
         burnQueue.push(_burner, burnAmount, currentPrice);
 
         super.burnAllArgs(_burner, _value, _note);
@@ -121,7 +122,7 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
         uint256 reqPrice;
         uint256 reqTimestamp;
         (reqBurner, reqValue, reqPrice, reqTimestamp) = burnQueue.pop();
-        reqBurner.transfer(reqValue.mul(reqPrice));
+        reqBurner.transfer(reqValue.mul(reqPrice).div(10**uint256(decimals)));
     }
 
     function settleAllBurns() external onlyOwner {
@@ -131,7 +132,7 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
     }
 
     function totalDebt() external onlyOwner view returns (uint256) {
-        return burnQueue.totalDebt();
+        return burnQueue.totalDebt().div(10**uint256(decimals));
     }
 
 
@@ -162,7 +163,7 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
 
         uint256 currentPrice = this.price();
         require(currentPrice > 0, "token has no price yet");
-        mint(msg.sender, msg.value.div(currentPrice));
+        mint(msg.sender, msg.value.mul(10**uint256(decimals)).div(currentPrice));
     }
 
 }
