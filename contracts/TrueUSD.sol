@@ -10,19 +10,44 @@ import "./TokenWithFees.sol";
 import "./StandardDelegate.sol";
 import "./WithdrawalToken.sol";
 import "./BurnQueue.sol";
+import "./EuroBalanceSheet.sol";
 
 // This is the top-level ERC20 contract, but most of the interesting functionality is
 // inherited - see the documentation on the corresponding contracts.
-contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableTokenWithBounds, CompliantToken, TokenWithFees, WithdrawalToken, StandardDelegate, CanDelegate {
+contract TrueUSD is 
+    ModularPausableToken, 
+    HasNoTokens, 
+    HasNoContracts, 
+    BurnableTokenWithBounds, 
+    CompliantToken, 
+    TokenWithFees, 
+    WithdrawalToken, 
+    StandardDelegate, 
+    CanDelegate
+{
+
     using SafeMath for *;
 
     string public name = "Jinvest";
     string public symbol = "JIN";
     uint8 public constant decimals = 18;
+    // Q: is not used
     uint8 public constant rounding = 2;
 
+    // stores total euros invested
+    uint256 public totalSupplyEuro;
+
     // Token price in ether (wei)
-    uint256 public price = 1000000000000000000;
+    uint256 public price = 10**uint256(decimals);
+
+    // Token price in euro in 2 decimals
+    uint8 public euroDecimal = 18;
+    uint256 public euroPrice = 100 * 10**uint256(euroDecimal);
+
+
+    event EuroBalanceSheetSet(address indexed sheet);
+    EuroBalanceSheet euroBalances;
+
 
     BurnQueue public burnQueue;
 
@@ -65,6 +90,12 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
     function setBalanceSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
         return super.setBalanceSheet(_sheet);
     }
+    function setEuroBalanceSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
+        euroBalances = EuroBalanceSheet(_sheet);
+        euroBalances.claimOwnership();
+        emit EuroBalanceSheetSet(_sheet);
+        return true;
+    }
     function setAllowanceSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
         return super.setAllowanceSheet(_sheet);
     }
@@ -101,8 +132,11 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
             _burnFeeFlat
         );
     }
+
     function burnAllArgs(address _burner, uint256 _value ,string _note) internal {
-        uint256 currentPrice = this.price();
+        uint256 currentPrice = price;
+        uint256 currentEuroPrice = this.euroPrice();
+
         require(currentPrice > 0, "token has no price yet");
 
         uint256 burnAmount = _value;
@@ -110,8 +144,10 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
             uint256 burnFee = super.checkBurnFee(_value);
             burnAmount = _value.sub(burnFee);
         }
+
+        // Q: check burnAmount > 0 is cleaner
         require(burnAmount.mul(currentPrice).div(10**uint256(decimals)) > 0, "insufficient burn amount");
-        burnQueue.push(_burner, burnAmount, currentPrice);
+        burnQueue.push(_burner, burnAmount, currentPrice, currentEuroPrice);
 
         super.burnAllArgs(_burner, _value, _note);
     }
@@ -120,9 +156,13 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
         address reqBurner;
         uint256 reqValue;
         uint256 reqPrice;
+        uint256 reqEuroPrice;
         uint256 reqTimestamp;
-        (reqBurner, reqValue, reqPrice, reqTimestamp) = burnQueue.pop();
+        (reqBurner, reqValue, reqPrice, reqEuroPrice, reqTimestamp) = burnQueue.pop();
         reqBurner.transfer(reqValue.mul(reqPrice).div(10**uint256(decimals)));
+
+        uint256 reqEuroValue = reqValue.mul(reqEuroPrice).div(10**uint256(euroDecimal));
+        totalSupplyEuro = totalSupplyEuro.sub(reqEuroPrice);
     }
 
     function settleAllBurns() external onlyOwner {
@@ -149,8 +189,13 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
         token.safeTransfer(_to, balance);
     }
 
+    // Q: price??? eth-euro or token-euro or token-eth
     function setTokenPrice(uint256 _price) external onlyOwner {
         price = _price;
+    }
+
+    function setTokenEuroPrice(uint256 _price) external onlyOwner {
+        euroPrice = _price;
     }
 
     function () external payable {
@@ -163,7 +208,15 @@ contract TrueUSD is ModularPausableToken, HasNoTokens, HasNoContracts, BurnableT
 
         uint256 currentPrice = this.price();
         require(currentPrice > 0, "token has no price yet");
-        mint(msg.sender, msg.value.mul(10**uint256(decimals)).div(currentPrice));
+        uint256 tokensInvest = msg.value.mul(10**uint256(decimals)).div(currentPrice);
+        mint(msg.sender, tokensInvest);
+
+        uint256 currentEuroPrice = this.euroPrice();
+        uint256 eurosInvest = tokensInvest.mul(currentEuroPrice).div(10**uint256(euroDecimal));
+        // update total invested euros
+        totalSupplyEuro = totalSupplyEuro.add(eurosInvest);
+        // update euro balance
+        euroBalances.addBalanceEuro(msg.sender, eurosInvest);
     }
 
 }

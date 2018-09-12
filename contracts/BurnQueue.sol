@@ -10,6 +10,7 @@ contract BurnQueue is Claimable {
         address from;
         uint256 value;
         uint256 price;
+        uint256 euroPrice;
         uint256 timestamp;
     }
 
@@ -17,17 +18,17 @@ contract BurnQueue is Claimable {
     uint256 private frontPos = 0;
     BurnRequest[] public burnRequests;
 
-    event RequestBurn(address indexed from, uint256 value, uint256 price, uint256 timestamp);
+    event RequestBurn(address indexed from, uint256 value, uint256 price, uint256 euroPrice, uint256 timestamp);
 
-    function push(address _from, uint256 _value, uint256 _price) public onlyOwner {
-        BurnRequest memory req = BurnRequest(_from, _value, _price, block.timestamp);
-        emit RequestBurn(_from, _value, _price, block.timestamp);
+    function push(address _from, uint256 _value, uint256 _price, uint256 _euroPrice) public onlyOwner {
+        BurnRequest memory req = BurnRequest(_from, _value, _price, _euroPrice, block.timestamp);
+        emit RequestBurn(_from, _value, _price, _euroPrice, block.timestamp);
 
         backPos = burnRequests.length;
         burnRequests.push(req);
     }
 
-    function pop() public onlyOwner returns (address, uint256, uint256, uint256) {
+    function pop() public onlyOwner returns (address, uint256, uint256, uint256, uint256) {
         require(burnRequests.length > 0);
         BurnRequest memory req = burnRequests[frontPos];
         delete burnRequests[frontPos];
@@ -37,7 +38,7 @@ contract BurnQueue is Claimable {
             frontPos = 0;
             burnRequests.length = 0;
         }
-        return (req.from, req.value, req.price, req.timestamp);
+        return (req.from, req.value, req.price, req.euroPrice, req.timestamp);
     }
 
     function count() public onlyOwner view returns (uint256) {

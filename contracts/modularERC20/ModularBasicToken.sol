@@ -9,8 +9,8 @@ import "./BalanceSheet.sol";
 // HasNoContracts because then it can relinquish its balance sheet to a new
 // version of the token, removing the need to copy over balances.
 /**
- * @title Basic token
- * @dev Basic version of StandardToken, with no allowances.
+  * @title Basic token
+  * @dev Basic version of StandardToken, with no allowances.
  */
 contract ModularBasicToken is ERC20Basic, Claimable {
     using SafeMath for uint256;
@@ -22,8 +22,8 @@ contract ModularBasicToken is ERC20Basic, Claimable {
     event BalanceSheetSet(address indexed sheet);
 
     /**
-    * @dev claim ownership of the balancesheet contract
-    * @param _sheet The address to of the balancesheet to claim.
+     * @dev claim ownership of the balancesheet contract
+     * @param _sheet The address to of the balancesheet to claim.
     */
     function setBalanceSheet(address _sheet) public onlyOwner returns (bool){
         balances = BalanceSheet(_sheet);
@@ -33,16 +33,16 @@ contract ModularBasicToken is ERC20Basic, Claimable {
     }
 
     /**
-    * @dev total number of tokens in existence
+     * @dev total number of tokens in existence
     */
     function totalSupply() public view returns (uint256) {
         return totalSupply_;
     }
 
     /**
-    * @dev transfer token for a specified address
-    * @param _to The address to transfer to.
-    * @param _value The amount to be transferred.
+     * @dev transfer token for a specified address
+     * @param _to The address to transfer to.
+     * @param _value The amount to be transferred.
     */
     function transfer(address _to, uint256 _value) public returns (bool) {
         transferAllArgs(msg.sender, _to, _value);
@@ -62,9 +62,9 @@ contract ModularBasicToken is ERC20Basic, Claimable {
     }
 
     /**
-    * @dev Gets the balance of the specified address.
-    * @param _owner The address to query the the balance of.
-    * @return An uint256 representing the amount owned by the passed address.
+     * @dev Gets the balance of the specified address.
+     * @param _owner The address to query the the balance of.
+     * @return An uint256 representing the amount owned by the passed address.
     */
     function balanceOf(address _owner) public view returns (uint256 balance) {
         return balances.balanceOf(_owner);
