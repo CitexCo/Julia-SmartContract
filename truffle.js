@@ -7,14 +7,14 @@ module.exports = {
   solc: {
     optimizer: {
       enabled: true,
-      runs: 2000000000
+      runs: 1
     }
   },
   networks: {
     development: {
       host: "localhost",
       port: 8545,
-      gas: 7990000,
+    //   gas: 7990000,
       gasPrice: 1, // Specified in Wei
       network_id: "*" // Match any network id
     },
