@@ -1,5 +1,6 @@
 var BalanceSheet = artifacts.require("BalanceSheet");
 var AllowanceSheet = artifacts.require("AllowanceSheet");
+var RefferalRewardSheet = artifacts.require("RefferalRewardSheet");
 var BurnQueue = artifacts.require('BurnQueue');
 var TrueUSD = artifacts.require("TrueUSD");
 var Registry = artifacts.require("Registry")
@@ -22,7 +23,7 @@ module.exports = async function (deployer) {
     console.log("balanceSheet Address: ", balances.address)
     const allowances = await AllowanceSheet.new()
     console.log("allowanceSheet Address: ", allowances.address)
-    const euroBalances = await BalanceSheet.new()
+    const refferalRewardSheet = await RefferalRewardSheet.new()
     console.log("euroBalanceSheet Address: ", balances.address)
     const burnqueue = await BurnQueue.new()
     console.log("burnqueue Address: ", allowances.address)
@@ -34,11 +35,11 @@ module.exports = async function (deployer) {
     console.log("trueUSD Address: ", trueUSD.address)
     await balances.transferOwnership(trueUSD.address)
     await allowances.transferOwnership(trueUSD.address)
-    await euroBalances.transferOwnership(trueUSD.address)
+    await refferalRewardSheet.transferOwnership(trueUSD.address)
     await burnqueue.transferOwnership(trueUSD.address)
     await registry.transferOwnership(trueUSD.address)
     await trueUSD.setBalanceSheet(balances.address)
-    await trueUSD.setBalanceSheet(euroBalances.address)
+    await trueUSD.setRefferalRewardSheet(refferalRewardSheet.address)
     await trueUSD.setAllowanceSheet(allowances.address)
     await trueUSD.setBurnQueue(burnqueue.address)
     await trueUSD.setRegistry(registry.address)

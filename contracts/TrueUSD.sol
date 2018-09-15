@@ -10,7 +10,7 @@ import "./TokenWithFees.sol";
 import "./StandardDelegate.sol";
 import "./WithdrawalToken.sol";
 import "./BurnQueue.sol";
-import "./EuroBalanceSheet.sol";
+import "./RefferalRewardSheet.sol";
 
 // This is the top-level ERC20 contract, but most of the interesting functionality is
 // inherited - see the documentation on the corresponding contracts.
@@ -45,8 +45,8 @@ contract TrueUSD is
     uint256 public euroPrice = 100 * 10**uint256(euroDecimal);
 
 
-    event EuroBalanceSheetSet(address indexed sheet);
-    EuroBalanceSheet euroBalances;
+    event RefferalRewardSheetSet(address indexed sheet);
+    RefferalRewardSheet refferalRewardSheet;
 
 
     BurnQueue public burnQueue;
@@ -90,10 +90,10 @@ contract TrueUSD is
     function setBalanceSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
         return super.setBalanceSheet(_sheet);
     }
-    function setEuroBalanceSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
-        euroBalances = EuroBalanceSheet(_sheet);
-        euroBalances.claimOwnership();
-        emit EuroBalanceSheetSet(_sheet);
+    function setRefferalRewardSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
+        refferalRewardSheet = RefferalRewardSheet(_sheet);
+        refferalRewardSheet.claimOwnership();
+        emit RefferalRewardSheetSet(_sheet);
         return true;
     }
     function setAllowanceSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
@@ -161,7 +161,7 @@ contract TrueUSD is
         (reqBurner, reqValue, reqPrice, reqEuroPrice, reqTimestamp) = burnQueue.pop();
         reqBurner.transfer(reqValue.mul(reqPrice).div(10**uint256(decimals)));
 
-        uint256 reqEuroValue = reqValue.mul(reqEuroPrice).div(10**uint256(euroDecimal));
+        // uint256 reqEuroValue = reqValue.mul(reqEuroPrice).div(10**uint256(euroDecimal));
         totalSupplyEuro = totalSupplyEuro.sub(reqEuroPrice);
     }
 
@@ -215,8 +215,8 @@ contract TrueUSD is
         uint256 eurosInvest = tokensInvest.mul(currentEuroPrice).div(10**uint256(euroDecimal));
         // update total invested euros
         totalSupplyEuro = totalSupplyEuro.add(eurosInvest);
-        // update euro balance
-        euroBalances.addBalanceEuro(msg.sender, eurosInvest);
+        // update reward sheet 
+        
     }
 
 }
