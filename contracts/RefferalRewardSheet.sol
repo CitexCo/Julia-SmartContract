@@ -1,4 +1,4 @@
-pragma solidity "0.4.23";
+pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Claimable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -71,11 +71,11 @@ contract RefferalRewardSheet is Claimable {
     function addDeposit(address _ref, uint256 _value) public onlyOwner {
         require(_ref != address(0), 'Invalid Refferal Address');
         RewardBalance storage rewardBalance = refferalRewards[_ref];
-        require(rewardBalance.totalRewards > rewardBalance.totalDeposits.add(_value), 'Credit is too low.');
+        require(rewardBalance.totalRewards >= rewardBalance.totalDeposits.add(_value), 'Credit is too low.');
         rewardBalance.totalDeposits = rewardBalance.totalDeposits.add(_value);
         totalDeposits = totalDeposits.add(_value);
         totalDebts = totalDebts.sub(_value);
-        emit RewardReceived(_ref, _value, 'Refferal Reward Added');
+        emit RewardReceived(_ref, _value, 'Refferal Reward Received');
     }
 
     /**
