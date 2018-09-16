@@ -44,15 +44,16 @@ contract TrueUSD is
     uint8 public euroDecimal = 18;
     uint256 public euroPrice = 100 * 10**uint256(euroDecimal);
 
-
-    event RefferalRewardSheetSet(address indexed sheet);
-    RefferalRewardSheet refferalRewardSheet;
-
-
+    uint256 public refferalStakeNumerator = 1;
+    uint256 public refferalStakeDenominator = 100;
+    
+    RefferalRewardSheet public refferalRewardSheet;
     BurnQueue public burnQueue;
 
     event ChangeTokenName(string newName, string newSymbol);
+    event ChangeRefferalStake(uint256 newRefferalStakeNumerator, uint256 newRefferalStakeDenominator);
     event BurnQueueSet(address indexed queue);
+    event RefferalRewardSheetSet(address indexed sheet);
 
     constructor() public {
         totalSupply_ = 0;
@@ -71,6 +72,12 @@ contract TrueUSD is
         name = _name;
         symbol = _symbol;
         emit ChangeTokenName(_name, _symbol);
+    }
+
+    function changeRefferalStake(uint256 _refferalStakeNumerator, uint256 _refferalStakeDenominator) onlyOwner public {
+        refferalStakeNumerator = _refferalStakeNumerator;
+        refferalStakeDenominator = _refferalStakeDenominator;
+        emit ChangeRefferalStake(_refferalStakeNumerator, _refferalStakeDenominator);
     }
 
     // disable most onlyOwner functions upon delegation, since the owner should
@@ -175,6 +182,18 @@ contract TrueUSD is
         return burnQueue.totalDebt().div(10**uint256(decimals));
     }
 
+    function totalRefferalDebt() external onlyOwner view returns (uint256) {
+        return refferalRewardSheet.totalDebts();
+    }
+
+    function refferalCreditOf(address _user) public view returns (uint256) {
+        return refferalRewardSheet.creditOf(_user);
+    }
+
+    function reclaimRefferalCredit(uint256 _credit) external {
+        refferalRewardSheet.addDeposit(msg.sender, _credit);
+        msg.sender.transfer(_credit);
+    }
 
     // Alternatives to the normal NoOwner functions in case this contract's owner
     // can't own ether or tokens.
@@ -198,6 +217,10 @@ contract TrueUSD is
         euroPrice = _price;
     }
 
+    function setRefferal(address _user, address _ref) external onlyOwner {
+        refferalRewardSheet.setRefferal(_user, _ref);
+    }
+
     function () external payable {
         require(msg.value > 0, "sent value should at least be 1 wei");
 
@@ -215,8 +238,14 @@ contract TrueUSD is
         uint256 eurosInvest = tokensInvest.mul(currentEuroPrice).div(10**uint256(euroDecimal));
         // update total invested euros
         totalSupplyEuro = totalSupplyEuro.add(eurosInvest);
-        // update reward sheet 
-        
+
+        // update refferal reward sheet 
+        address refferal = refferalRewardSheet.refferalOf(msg.sender);
+        if (refferal != address(0)) {
+            uint256 refferalReward = msg.value.mul(refferalStakeNumerator).div(refferalStakeDenominator);
+            if (refferalReward > 0)
+                refferalRewardSheet.addReward(refferal, refferalReward);
+        }
     }
 
 }
