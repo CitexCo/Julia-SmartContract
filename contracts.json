@@ -991,11 +991,6 @@
                 "type": "constructor"
             },
             {
-                "payable": true,
-                "stateMutability": "payable",
-                "type": "fallback"
-            },
-            {
                 "anonymous": false,
                 "inputs": [
                     {
@@ -1625,9 +1620,18 @@
                 "payable": false,
                 "stateMutability": "nonpayable",
                 "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [],
+                "name": "buy",
+                "outputs": [],
+                "payable": true,
+                "stateMutability": "payable",
+                "type": "function"
             }
         ],
-        "address": "0xac0ecb7929d01f27ef9b6b42dcdf490a6a6bb3e4"
+        "address": "0xf778ec62594c8949dcce174c758e5f05e17f19a9"
     },
     "registry": {
         "abi": [
@@ -1867,6 +1871,6 @@
                 "type": "function"
             }
         ],
-        "address": "0xd290443d072b5b06a540e413f6eecaccd30ad191"
+        "address": "0x84e62cc337a98ea805d6ecea3616ae11aba0f4f9"
     }
 }

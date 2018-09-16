@@ -7,3 +7,4 @@ allFiredEvents
 coverage
 coverage.json
 coverageEnv
+contracts.json

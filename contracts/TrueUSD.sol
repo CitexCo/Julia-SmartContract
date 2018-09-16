@@ -31,7 +31,6 @@ contract TrueUSD is
     string public name = "Jinvest";
     string public symbol = "JIN";
     uint8 public constant decimals = 18;
-    // Q: is not used
     uint8 public constant rounding = 2;
 
     // stores total euros invested
