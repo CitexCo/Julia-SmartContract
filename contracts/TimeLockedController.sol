@@ -145,41 +145,6 @@ contract TimeLockedController is HasNoEther, HasNoTokens, Claimable {
         trueUSD.changeStaker(_newStaker);
     }
 
-    // Future BurnableToken calls to trueUSD will be delegated to _delegate
-    function delegateToNewContract(DelegateBurnable _delegate,
-                                   Ownable _balanceSheet,
-                                   Ownable _alowanceSheet,
-                                   Ownable _burnQueue)public onlyOwner{
-        //initiate transfer ownership of storage contracts from trueUSD contract
-        requestReclaimContract(_balanceSheet);
-        requestReclaimContract(_alowanceSheet);
-        requestReclaimContract(_burnQueue);
-
-        //claim ownership of storage contract
-        issueClaimOwnership(_balanceSheet);
-        issueClaimOwnership(_alowanceSheet);
-        issueClaimOwnership(_burnQueue);
-
-        //initiate transfer ownership of storage contracts to new delegate contract
-        transferChild(_balanceSheet,_delegate);
-        transferChild(_alowanceSheet,_delegate);
-        transferChild(_burnQueue,_delegate);
-
-        //call to claim the storage contract with the new delegate contract
-        require(address(_delegate).call(bytes4(keccak256("setBalanceSheet(address)")), _balanceSheet));
-        require(address(_delegate).call(bytes4(keccak256("setAllowanceSheet(address)")), _alowanceSheet));
-        require(address(_delegate).call(bytes4(keccak256("setBurnQueue(address)")), _burnQueue));
-
-
-        trueUSD.delegateToNewContract(_delegate);
-
-    }
-
-    // Incoming delegate* calls from _source will be accepted by trueUSD
-    function setDelegatedFrom(address _source) public onlyOwner {
-        trueUSD.setDelegatedFrom(_source);
-    }
-
     // Update this contract's trueUSD pointer to newContract (e.g. if the
     // contract is upgraded)
     function setTrueUSD(TrueUSD _newContract) public onlyOwner {
