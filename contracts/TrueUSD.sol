@@ -21,9 +21,7 @@ contract TrueUSD is
     BurnableTokenWithBounds, 
     CompliantToken, 
     TokenWithFees, 
-    WithdrawalToken, 
-    StandardDelegate, 
-    CanDelegate
+    WithdrawalToken
 {
 
     using SafeMath for *;
@@ -79,42 +77,35 @@ contract TrueUSD is
         emit ChangeRefferalStake(_refferalStakeNumerator, _refferalStakeDenominator);
     }
 
-    // disable most onlyOwner functions upon delegation, since the owner should
-    // use the new version of the contract
-    modifier onlyWhenNoDelegate() {
-        require(address(delegate) == address(0),"a delegate contract exist");
-        _;
-    }
-
-    function forceMint(address _to, uint256 _value) onlyWhenNoDelegate onlyOwner public returns (bool) {
+    function forceMint(address _to, uint256 _value) onlyOwner public returns (bool) {
         super.mint(_to, _value);
     }
 
-    function mint(address _to, uint256 _value) onlyWhenNoDelegate internal returns (bool) {
+    function mint(address _to, uint256 _value) internal returns (bool) {
         super.mint(_to, _value);
     }
-    function setBalanceSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
+    function setBalanceSheet(address _sheet) public returns (bool) {
         return super.setBalanceSheet(_sheet);
     }
-    function setRefferalRewardSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
+    function setRefferalRewardSheet(address _sheet) public returns (bool) {
         refferalRewardSheet = RefferalRewardSheet(_sheet);
         refferalRewardSheet.claimOwnership();
         emit RefferalRewardSheetSet(_sheet);
         return true;
     }
-    function setAllowanceSheet(address _sheet) onlyWhenNoDelegate public returns (bool) {
+    function setAllowanceSheet(address _sheet) public returns (bool) {
         return super.setAllowanceSheet(_sheet);
     }
-    function setBurnBounds(uint256 _min, uint256 _max) onlyWhenNoDelegate public {
+    function setBurnBounds(uint256 _min, uint256 _max) public {
         super.setBurnBounds(_min, _max);
     }
-    function setRegistry(Registry _registry) onlyWhenNoDelegate public {
+    function setRegistry(Registry _registry) public {
         super.setRegistry(_registry);
     }
-    function changeStaker(address _newStaker) onlyWhenNoDelegate public {
+    function changeStaker(address _newStaker) public {
         super.changeStaker(_newStaker);
     }
-    function wipeBlacklistedAccount(address _account) onlyWhenNoDelegate public {
+    function wipeBlacklistedAccount(address _account) public {
         super.wipeBlacklistedAccount(_account);
     }
     function changeStakingFees(
@@ -126,7 +117,7 @@ contract TrueUSD is
         uint256 _burnFeeNumerator,
         uint256 _burnFeeDenominator,
         uint256 _burnFeeFlat
-    ) onlyWhenNoDelegate public {
+    ) public {
         super.changeStakingFees(
             _transferFeeNumerator,
             _transferFeeDenominator,
