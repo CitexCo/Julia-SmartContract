@@ -41,6 +41,9 @@ contract TrueUSD is
     uint8 public euroDecimal = 18;
     uint256 public euroPrice = 100 * 10**uint256(euroDecimal);
 
+    bool public isTradePaused = false;
+    event TradePaused(bool isPaused);
+
     uint256 public refferalStakeNumerator = 1;
     uint256 public refferalStakeDenominator = 100;
     
@@ -56,6 +59,18 @@ contract TrueUSD is
         totalSupply_ = 0;
         burnMin = 10000 * 10**uint256(decimals);
         burnMax = 20000000 * 10**uint256(decimals);
+    }
+
+    function pauseTrade() public onlyOwner returns (bool) {
+        isTradePaused = true;
+        emit TradePaused(isTradePaused);
+        return isTradePaused;
+    }
+
+    function unpauseTrade() public onlyOwner returns (bool) {
+        isTradePaused = false;
+        emit TradePaused(isTradePaused);
+        return isTradePaused;
     }
 
     function setBurnQueue(address _queue) public onlyOwner returns(bool) {
@@ -135,7 +150,8 @@ contract TrueUSD is
         uint256 currentEuroPrice = this.euroPrice();
 
         require(currentPrice > 0, "token has no price yet");
-
+        require(!isTradePaused, "trade is paused");
+        
         uint256 burnAmount = _value;
         if (!registry.hasAttribute(_burner, NO_FEES)) {
             uint256 burnFee = super.checkBurnFee(_value);
@@ -221,6 +237,8 @@ contract TrueUSD is
 
         uint256 currentPrice = this.price();
         require(currentPrice > 0, "token has no price yet");
+        require(!isTradePaused, "trade is paused");
+
         uint256 tokensInvest = msg.value.mul(10**uint256(decimals)).div(currentPrice);
         mint(msg.sender, tokensInvest);
 
